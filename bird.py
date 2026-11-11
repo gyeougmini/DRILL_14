@@ -36,8 +36,9 @@ class Bird:
         # 소년/땅과 겹치지 않도록 화면 위쪽 하늘 영역에 무작위 배치
         self.x = random.randint(half_w, get_canvas_width() - half_w)
         self.y = random.randint(250, get_canvas_height() - half_h)
-        self.frame = 0.0
-        self.dir = 1    # 1: 오른쪽, -1: 왼쪽
+        # 시작 프레임과 방향을 무작위로 하여 10마리가 똑같이 움직이지 않도록 함
+        self.frame = random.uniform(0, FRAMES_PER_ACTION)
+        self.dir = random.choice([-1, 1])    # 1: 오른쪽, -1: 왼쪽
 
     def update(self):
         self.frame = (self.frame + FRAMES_PER_SECOND * game_framework.frame_time) % FRAMES_PER_ACTION
