@@ -7,11 +7,9 @@ import game_framework
 # 화면 단위 : 10 pixel = 30 cm (ruler.png 와 동일한 기준)
 PIXEL_PER_METER = (10.0 / 0.3)
 
-# 비행 속도 : km/h -> m/min -> m/s -> pixel/s
-FLY_SPEED_KMPH = 30.0
-FLY_SPEED_MPM = (FLY_SPEED_KMPH * 1000.0 / 60.0)
-FLY_SPEED_MPS = (FLY_SPEED_MPM / 60.0)
-FLY_SPEED_PPS = (FLY_SPEED_MPS * PIXEL_PER_METER)
+# 비행 속도 범위 (실제 소형~중형 조류의 순항 속도 수준)
+FLY_SPEED_KMPH_MIN = 20.0
+FLY_SPEED_KMPH_MAX = 40.0
 
 # bird_animation.png : 918 x 506, 5열 x 3행 격자, 실제 프레임은 5 + 5 + 4 = 14장
 FRAME_WIDTH = 183
@@ -24,6 +22,12 @@ FRAMES_PER_ACTION = 14
 BIRD_WIDTH_M = 2.0
 BIRD_WIDTH_PIXEL = BIRD_WIDTH_M * PIXEL_PER_METER
 BIRD_HEIGHT_PIXEL = BIRD_WIDTH_PIXEL * FRAME_HEIGHT / FRAME_WIDTH
+
+
+def kmph_to_pps(kmph):
+    mpm = kmph * 1000.0 / 60.0      # km/h -> m/min
+    mps = mpm / 60.0                # m/min -> m/s
+    return mps * PIXEL_PER_METER    # m/s -> pixel/s
 
 # 날갯짓 1회(14프레임)에 걸리는 시간
 TIME_PER_ACTION = 0.5
@@ -44,10 +48,13 @@ class Bird:
         # 시작 프레임과 방향을 무작위로 하여 10마리가 똑같이 움직이지 않도록 함
         self.frame = random.uniform(0, FRAMES_PER_ACTION)
         self.dir = random.choice([-1, 1])    # 1: 오른쪽, -1: 왼쪽
+        # 새마다 비행 속도를 다르게 함
+        speed_kmph = random.uniform(FLY_SPEED_KMPH_MIN, FLY_SPEED_KMPH_MAX)
+        self.speed_pps = kmph_to_pps(speed_kmph)
 
     def update(self):
         self.frame = (self.frame + FRAMES_PER_SECOND * game_framework.frame_time) % FRAMES_PER_ACTION
-        self.x += self.dir * FLY_SPEED_PPS * game_framework.frame_time
+        self.x += self.dir * self.speed_pps * game_framework.frame_time
 
         # 화면 끝에 닿으면 방향을 바꿔 좌우로 반복 비행
         half_w = BIRD_WIDTH_PIXEL / 2
