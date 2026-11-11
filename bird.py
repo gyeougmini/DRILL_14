@@ -11,12 +11,15 @@ PIXEL_PER_METER = (10.0 / 0.3)
 FLY_SPEED_KMPH_MIN = 20.0
 FLY_SPEED_KMPH_MAX = 40.0
 
+# 날갯짓 1회 동안 앞으로 나아가는 거리 (사람의 보폭(STRIDE)에 해당)
+FLY_DISTANCE_PER_FLAP_M = 4.0
+
 # bird_animation.png : 918 x 506, 5열 x 3행 격자, 실제 프레임은 5 + 5 + 4 = 14장
 FRAME_WIDTH = 183
 FRAME_HEIGHT = 168
 SHEET_HEIGHT = 506
 FRAMES_PER_ROW = 5
-FRAMES_PER_ACTION = 14
+FRAMES_PER_FLAP = 14
 
 # 화면에 그릴 새의 실제 크기 (가로 2.0 m, 세로는 원본 비율 유지)
 BIRD_WIDTH_M = 2.0
@@ -29,10 +32,11 @@ def kmph_to_pps(kmph):
     mps = mpm / 60.0                # m/min -> m/s
     return mps * PIXEL_PER_METER    # m/s -> pixel/s
 
-# 날갯짓 1회(14프레임)에 걸리는 시간
-TIME_PER_ACTION = 0.5
-ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
-FRAMES_PER_SECOND = FRAMES_PER_ACTION * ACTION_PER_TIME
+
+def flap_frames_per_second(kmph):
+    mps = kmph * 1000.0 / 3600.0
+    flaps_per_second = mps / FLY_DISTANCE_PER_FLAP_M
+    return flaps_per_second * FRAMES_PER_FLAP
 
 
 class Bird:
@@ -46,15 +50,17 @@ class Bird:
         self.x = random.uniform(half_w, get_canvas_width() - half_w)
         self.y = random.uniform(250, get_canvas_height() - half_h)
         # 시작 프레임과 방향을 무작위로 하여 10마리가 똑같이 움직이지 않도록 함
-        self.frame = random.uniform(0, FRAMES_PER_ACTION)
+        self.frame = random.uniform(0, FRAMES_PER_FLAP)
         self.dir = random.choice([-1, 1])    # 1: 오른쪽, -1: 왼쪽
-        # 새마다 비행 속도를 다르게 함
+        # 새마다 속도를 다르게 하고, 날갯짓 속도는 비행 속도에 비례시킴
         speed_kmph = random.uniform(FLY_SPEED_KMPH_MIN, FLY_SPEED_KMPH_MAX)
         self.speed_pps = kmph_to_pps(speed_kmph)
+        self.frames_per_second = flap_frames_per_second(speed_kmph)
 
     def update(self):
-        self.frame = (self.frame + FRAMES_PER_SECOND * game_framework.frame_time) % FRAMES_PER_ACTION
-        self.x += self.dir * self.speed_pps * game_framework.frame_time
+        dt = game_framework.frame_time
+        self.frame = (self.frame + self.frames_per_second * dt) % FRAMES_PER_FLAP
+        self.x += self.dir * self.speed_pps * dt
 
         # 화면 끝에 닿으면 방향을 바꿔 좌우로 반복 비행
         half_w = BIRD_WIDTH_PIXEL / 2
