@@ -1,4 +1,6 @@
-from pico2d import load_image, get_canvas_width
+import random
+
+from pico2d import load_image, get_canvas_width, get_canvas_height
 
 import game_framework
 
@@ -27,10 +29,13 @@ FRAMES_PER_SECOND = FRAMES_PER_ACTION * ACTION_PER_TIME
 class Bird:
     image = None
 
-    def __init__(self, x=800, y=400):
+    def __init__(self):
         if Bird.image is None:
             Bird.image = load_image('bird_animation.png')
-        self.x, self.y = x, y
+        half_w, half_h = FRAME_WIDTH // 2, FRAME_HEIGHT // 2
+        # 소년/땅과 겹치지 않도록 화면 위쪽 하늘 영역에 무작위 배치
+        self.x = random.randint(half_w, get_canvas_width() - half_w)
+        self.y = random.randint(250, get_canvas_height() - half_h)
         self.frame = 0.0
         self.dir = 1    # 1: 오른쪽, -1: 왼쪽
 
