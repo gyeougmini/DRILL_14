@@ -2,6 +2,15 @@ from pico2d import load_image
 
 import game_framework
 
+# 화면 단위 : 10 pixel = 30 cm (ruler.png 와 동일한 기준)
+PIXEL_PER_METER = (10.0 / 0.3)
+
+# 비행 속도 : km/h -> m/min -> m/s -> pixel/s
+FLY_SPEED_KMPH = 30.0
+FLY_SPEED_MPM = (FLY_SPEED_KMPH * 1000.0 / 60.0)
+FLY_SPEED_MPS = (FLY_SPEED_MPM / 60.0)
+FLY_SPEED_PPS = (FLY_SPEED_MPS * PIXEL_PER_METER)
+
 # bird_animation.png : 918 x 506, 5열 x 3행 격자, 실제 프레임은 5 + 5 + 4 = 14장
 FRAME_WIDTH = 183
 FRAME_HEIGHT = 168
@@ -23,9 +32,11 @@ class Bird:
             Bird.image = load_image('bird_animation.png')
         self.x, self.y = x, y
         self.frame = 0.0
+        self.dir = 1    # 1: 오른쪽, -1: 왼쪽
 
     def update(self):
         self.frame = (self.frame + FRAMES_PER_SECOND * game_framework.frame_time) % FRAMES_PER_ACTION
+        self.x += self.dir * FLY_SPEED_PPS * game_framework.frame_time
 
     def draw(self):
         index = int(self.frame)
