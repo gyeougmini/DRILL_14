@@ -1,4 +1,4 @@
-from pico2d import load_image
+from pico2d import load_image, get_canvas_width
 
 import game_framework
 
@@ -37,6 +37,15 @@ class Bird:
     def update(self):
         self.frame = (self.frame + FRAMES_PER_SECOND * game_framework.frame_time) % FRAMES_PER_ACTION
         self.x += self.dir * FLY_SPEED_PPS * game_framework.frame_time
+
+        # 화면 끝에 닿으면 방향을 바꿔 좌우로 반복 비행
+        half_w = FRAME_WIDTH // 2
+        if self.x > get_canvas_width() - half_w:
+            self.x = get_canvas_width() - half_w
+            self.dir = -1
+        elif self.x < half_w:
+            self.x = half_w
+            self.dir = 1
 
     def draw(self):
         index = int(self.frame)
